@@ -1,46 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sky Island</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+       <meta charset="UTF-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       <title>SKY ISLAND!!</title>
+       <link rel="preconnect" href="https://fonts.googleapis.com">
+       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@800&display=swap" rel="stylesheet">
+       <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <div id="game-container">
-            <div id="sky-background"></div>
-            <canvas id="sky-background"></canvas>
-
-            <div id="ui-layer">
-                <div id="hud" class="hidden">
-                    <div class="score-pill">
-                        Score: <span id="score">0</span>
-                    </div>
-                    <div class="stars-pill"><span id="stars">0</span></div>
-                </div>
-                <!--menuuuu meowww-->
-                <div id="start-screen" class="model">
-                    <h1>Sky Island</h1>
-                    <p>Climb up in the sky, try not to fall..</p>
-                    <div class="controls-info">
-                        <p>Arrow Keys / A & D to move</p>
-                        <p>Mouse will work jus fine</p>
-                    </div>
-                    <!--everybody when ded-->
-                    <div id="game-over-screen" class="modal">
-                        <h1>u died bruh!</h1>
-                        <div class="stats">
-                            <p>Score: <span id="final-score">0</span></p>
-                        </div>
-                        <button id="restart-btn">Try Again ofc</button>
-                    </div>
+        <div id="sky-background"></div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui-layer">
+            <div id="hud" class="hidden">
+                <div class="score-pill">
+                    SCORE: <span id="score">0</span>
                 </div>
             </div>
+            <div id="start-screen" class="modal">
+                <h1>SKY ISLAND</h1>
+                <div class="controls-info">
+                    USE A/D OR ARROWS.<br>
+                    MOUSE WORKS ASWEL.            
+                </div>
+                <button id="start-btn">LESGOOO</button>
+            </div>
+            <div id="game-over-screen" class="modal hidden">
+                <h2>REKT!</h2>
+                <div classs="stats">
+                    <p>FINAL SCORE: <span id="final-score">0</span></p>
+                </div>
+                <button id="restart-btn">AGAIN</button>
+            </div>
         </div>
+
         <script src="game.js"></script>
 </body>
 </html>
