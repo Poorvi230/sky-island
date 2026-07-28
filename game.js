@@ -26,6 +26,18 @@ window.addEventListener('touchend', (e) => {
     keys.ArrowRight = false;
 });
 
+let stratScreen = document.getElementById('start-screen');
+let gameOverScreen = document.getElementById('game-over-screen');
+let hud = document.getElementById('hud');
+let scoreDisplay = document.getElementById('score');
+let finalScoreDisplay = document.getElementById('final-score');
+
+let startBtn = document.getElementById('start-btn');
+let restartBtn= document.getElementById('restart-btn');
+
+let gameState = "START";
+let score = 0;
+
 let GAME_WIDTH = canvas.parentElement.clientWidth;
 let GAME_HEIGHT = canvas.parentElement.clientHeight;
 
@@ -94,8 +106,27 @@ function generateStartingPlatforms() {
 }
 generateStartingPlatforms();
 
+function startGame() {
+    gameState = "PLAYING";
+    score = 0;
+    scoreDisplay.innerText = score;
+
+    player.x = GAME_WIDTH / 2 - 20;
+    player.y = GAME_HEIGHT / 2;
+    player.vy = 0;
+
+    generateStartingPlatforms();
+
+    startScreen.classList.add('hidden');
+    gameOverScreen.classList.add('hidden');
+    hud.classList.remove('hidden');
+}
+startBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', startGame);
+
 function gameLoop() {
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    if (gameState === "PLAYING")
 
     player.vx = 0;
     if (keys.ArrowLeft || keys.a) player.vx = -player.speed;
@@ -124,8 +155,6 @@ function gameLoop() {
                 }
         });
     }
-
-    ctx.fillStyle = '#ff6b6b';
     
     if (player.y < GAME_HEIGHT / 2) {
         let diff = (GAME_HEIGHT / 2) - player.y;
@@ -149,6 +178,12 @@ function gameLoop() {
     ctx.strokeStyle = '#000';
     ctx.strokeRect(player.x, player.y, player.width, player.height);
 
+    if (player.y > GAME_HEIGHT) {
+        gameState = "GAMEOVER";
+        hud.classList.add('hidden');
+        gameOverScreen.classList.remove('hidden');
+        finalScoreDisplay.innerText = score;
+    }
     requestAnimationFrame(gameLoop);
 }
 gameLoop();
