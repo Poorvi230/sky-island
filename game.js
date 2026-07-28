@@ -12,6 +12,19 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('keyup', (e) => {
     if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
 });
+window.addEventListener('touchstart', (e) => {
+    let touchX = e.touches[0].clientX;
+
+    if (touchX < GAME_WIDTH / 2) {
+        keys.ArrowLeft = true;
+    } else {
+        keys.ArrowRight = true;
+    }
+});
+window.addEventListener('touchend', (e) => {
+    keys.ArrowLeft = false;
+    keys.ArrowRight = false;
+});
 
 let GAME_WIDTH = canvas.parentElement.clientWidth;
 let GAME_HEIGHT = canvas.parentElement.clientHeight;
@@ -31,8 +44,41 @@ let player = {
     y: 100,
     width: 40, height: 40, vy: 0,
     gravity: 0.4, vx: 0, 
-    speed: 6
+    speed: 6,
+    jumpForce: -13
 };
+
+let platforms = [];
+
+class Platform {
+    constructor(x, y) {
+        this.x = x; this.y = y;
+        this.width = 100;
+        this.height = 20;
+    }
+    draw(ctx) {
+        ctx.fillStyle = '#00FFCC';
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#000';
+        ctx.strokeRect(this.x, this.y, this.width, this.height);
+    }
+}
+function generateStartingPlatforms() {
+    platforms = [];
+    platforms.push(new Platform(GAME_WIDTH / 2 - 50, GAME_HEIGHT - 50));
+
+    let currentY = GAME_HEIGHT - 150;
+
+    while(currentY > 0) {
+        let randomX = Math.random() * (GAME_WIDTH - 100);
+        platforms.push(new Platform(randomX, currentY));
+
+        currentY -= Math.random() * 60 + 80;
+    }
+}
+generateStartingPlatforms();
 
 function gameLoop() {
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -40,14 +86,54 @@ function gameLoop() {
     player.vx = 0;
     if (keys.ArrowLeft || keys.a) player.vx = -player.speed;
     if (keys.ArrowRight || keys.d) player.vx = player.speed;
-    
+
     player.x += player.vx
+
+    if (player.x > GAME_WIDTH) {
+        player.x = -player.width;
+    } else if (player.x + player.width < 0) {
+        player.x = GAME_WIDTH;
+    }
 
     player.vy += player.gravity;
     player.y += player.vy;
 
+    if (player.vy > 0) {
+        platforms.forEach(plat => {
+            if (player.x < plat.x + plat.width && 
+                player.x + player.width > plat.x &&
+                player.y + player.height > plat.y &&
+                player.y + player.height < plat.y + plat.height + player.vy) {
+
+            player.y = plat.y - player.height;
+            player.vy = player.jumpForce;
+                }
+        });
+    }
+
     ctx.fillStyle = '#ff6b6b';
+    
+    if (player.y < GAME_HEIGHT / 2) {
+        let diff = (GAME_HEIGHT / 2) - player.y;
+        player.y += diff;
+
+        platforms.forEach(plat => {
+            plat.y += diff;
+        });
+        let highestPlatform = platforms[platforms.length - 1];
+        if (highestPlatform.y > 0) {
+            let randomX = Math.random() * (GAME_WIDTH - 100);
+            platforms.push(new Platform(randomX, highestPlatform.y - 120));
+        }
+    }
+    platforms = platforms.filter(plat => plat.y < GAME_HEIGHT + 100);
+    platforms.forEach(plat => plat.draw(ctx));
+
+    ctx.fillStyle = '#FF007F';
     ctx.fillRect(player.x, player.y, player.width, player.height);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#000';
+    ctx.strokeRect(player.x, player.y, player.width, player.height);
 
     requestAnimationFrame(gameLoop);
 }

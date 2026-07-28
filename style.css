@@ -31,6 +31,7 @@ canvas {
     position: absolute;
     top: 0; left: 0; width: 100vw;
     height: 100vh; z-index: 1;
+    touch-action: none;
 }
 #ui-layer {
     position: absolute;
@@ -50,7 +51,7 @@ canvas {
     padding: 10px 20px;
     border-radius: 30px;
     color: #2d3436; 
-    font-size: 800; font-size: 1.2rem;
+    font-weight: 800; font-size: 1.2rem;
 }
 .modal {
     position: absolute;
@@ -77,7 +78,7 @@ button {
     box-shadow: 12px 12px 0px #000;
     padding: 15px 30px; 
     font-size: 1.2rem; font-weight: 800;
-    cursor: pointer; box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+    cursor: pointer;
     transition: transform 0.2s;
 }
 button:hover {
