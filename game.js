@@ -57,12 +57,26 @@ class Platform {
         this.height = 20;
     }
     draw(ctx) {
-        ctx.fillStyle = '#00FFCC';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.fillStyle = '#8397a7';
 
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = '#000';
-        ctx.strokeRect(this.x, this.y, this.width, this.height);
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x + this.width, this.y + 4);
+
+        ctx.lineTo(this.x + this.width - 8, this.y + this.height);
+
+        ctx.lineTo(this.x + 12, this.y + this.height + 6);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#c1c9ce';
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x + this.width, this.y + 4);
+        ctx.lineTo(this.x + this.width - 5, this.y + 8);
+        ctx.lineTo(this.x + 5, this.y + 5);
+        ctx.closePath();
+        ctx.fill();
     }
 }
 function generateStartingPlatforms() {

@@ -1,47 +1,43 @@
-* {
-    margin: 0; padding: 0; box-sizing: border-box;
-    font-family: 'Outfit', sans-serif;
-    user-select: none;
-}
 body {
-    background-color: #000;
-    display: flex; 
-    justify-content: center; align-items: center; width: 100vw;
-    height: 100vh; overflow: hidden;
+    background-color: #1a1e22;
+    margin: 0; display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; overflow: hidden; 
 }
 #game-container {
-    position: relative; width: 100%;
-    max-width: 800px; height: 100%;
-    max-height: 850px; border-radius: 0;
-    overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.6); 
+    position: relative;
+    width: 100%; max-width: 450px;
+    height: 100%;
+    overflow: hidden;
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
 }
 @media (min-width: 600px) {
     #game-container {
-        height: 20vh; border-radius: 20px;
+        height: 90vh;
     }
 }
 
 #sky-background {
-    position: absolute; top: 0;
-    left: 0; width: 100vw; height: 100vh;
-    background: linear-gradient(to bottom, #190a42, #3b2875, #79529e, #a787ad, #c2e9fb);
-    z-index: 0;
+    position: absolute; top: -100%;
+    left: 0; width: 100%; height: 200%;
+    background: linear-gradient(to bottom, #1d2124, #2b3a42, #3f5765, #8397a7, #c1c9ce);
 }
+
 canvas {
-    position: absolute;
-    top: 0; left: 0; width: 100vw;
-    height: 100vh; z-index: 1;
+    position: absolute; top: 0;
+    left: 0; width: 100%; width: 100%;
+    height: 100%; z-index: 1;
     touch-action: none;
 }
 #ui-layer {
     position: absolute;
-    top: 0; left: 0; width: 100%;
-    height: 100%; z-index: 10;
+    top: 0; left: 0; 
+    width: 100%; height: 100%;
+    z-index: 10; 
     pointer-events: none;
-    display: flex; flex-direction: column;
-}
-#hud {
-    padding: 20px; display: flex; justify-content: space-between;
+    display: flex;
+    flex-direction: column;
 }
 
 .score-pill {
@@ -54,17 +50,19 @@ canvas {
     font-weight: 800; font-size: 1.2rem;
 }
 .modal {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255,255,255,0.3);
-    padding: 40px;
-    text-align: center; width: 85%;
-    pointer-events: auto; color: #2d3436;
+    background: #e1e6ea;
+    color: #2b3a42; padding: 60px;
+    clip-path: polygon(3% 0, 100% 5%, 96% 100%, 0 92%);
+    border: none; box-shadow: none;
 }
 .modal h1 {
-    font-size: 2.5rem; font-weight: 800; margin-bottom: 15px;
+    font-size: 4rem;
+    color: #3f5765;
+    text-shadow: none;
+}
+.modal.h2 {
+    color: #e67357;
+    text-shadow: none;
 }
 .controls-info {
     background: rgba(255,255,255,0.4);
@@ -73,17 +71,10 @@ canvas {
     margin-bottom: 20px; font-weight: 600;
 }
 button {
-    background: linear-gradient(135deg, #e75cb9, #6960f0);
-    color: white; 
-    box-shadow: 12px 12px 0px #000;
-    padding: 15px 30px; 
-    font-size: 1.2rem; font-weight: 800;
-    cursor: pointer;
+    background: #e67357;
+    color: #fff; padding: 20px 50px;
+    font-size: 1.5rem;
+    clip-path: polygon(10% 0, 100% 10%, 90% 100%, 0 90%);
+    border: none; box-shadow: none; 
     transition: transform 0.2s;
-}
-button:hover {
-    transform: translateY(-3px);
-}
-.hidden {
-    opacity: 0; pointer-events: none !important;
 }
