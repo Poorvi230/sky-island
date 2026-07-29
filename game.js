@@ -38,6 +38,8 @@ let restartBtn= document.getElementById('restart-btn');
 let gameState = "START";
 let score = 0;
 let maxAltitude = 0;
+let shakeTime = 0;
+let particles = [];
 
 //--sounds
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -92,6 +94,34 @@ let player = {
 };
 
 let platforms = [];
+
+class Particle {
+    constructor(x, y, color) {
+        this.x = x; this.y = y;
+        this.vx = (Math.random() - 0.5) * 10;
+        this.vy = (Math.random() - 0.5) * 10;
+        this.size = Math.random() * 8 + 4;
+        this.life = 1.0;
+        this.color = color;
+    }
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life -= 0.05;
+    }
+    draw(ctx) {
+        if (this.life <= 0) return;
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = Math.max(0, this.life);
+        ctx.fillRect(this.x, this.y, this.size, this.size);
+        ctx.globalAlpha = 1.0;
+    }
+}
+function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+        particles.push(new Particle(x, y, color));
+    }
+}
 
 class Platform {
     constructor(x, y, type = 0) {
@@ -171,6 +201,13 @@ restartBtn.addEventListener('click', startGame);
 
 function gameLoop() {
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    ctx.save();
+    if (shakeTime > 0) {
+        let dx = (Math.random() - 0.5) * 15;
+        let dy = (Math.random() - 0.5) * 15;
+        ctx.translate(dx, dy);
+        shakeTime--;
+    }
 
     if (gameState === "PLAYING") {
 
@@ -202,13 +239,17 @@ function gameLoop() {
                     
                     if (plat.type === 3) {
                         player.vy = player.jumpForce * 1.5;
+                        shakeTime = 8;
+                        spawnParticles(player.x, player.y + player.height, '#80ed99', 15);
                         playSound('jump');
                     } else {
                         player.vy = player.jumpForce;
+                        spawnParticles(plat.x + plat.width/2, plat.y, '#8387a7', 5);
                         playSound('jump');
                     }
                     if (plat.type === 2) {
                         plat.isBroken = true;
+                        spawnParticles(plat.x + plat.width/2, plat.y, '#a6b1e1', 20);
                     }
                 }
             });
@@ -241,6 +282,8 @@ function gameLoop() {
             hud.classList.add('hidden');
             gameOverScreen.classList.remove('hidden');
             finalScoreDisplay.innerText = score;
+            shakeTime = 20;
+            spawnParticles(player.x, player.y, '#FF007F', 40);
             playSound('death');
         }
     }
@@ -252,6 +295,12 @@ function gameLoop() {
     ctx.lineWidth = 4;
     ctx.strokeStyle = '#000';
     ctx.strokeRect(player.x, player.y, player.width, player.height);
+
+    particles.forEach(p => p.update());
+    particles = particles.filter(p => p.life > 0);
+    particles.forEach(p => p.draw(ctx));
+    
+    ctx.restore();
 
     requestAnimationFrame(gameLoop);
 }
