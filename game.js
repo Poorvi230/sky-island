@@ -26,7 +26,7 @@ window.addEventListener('touchend', (e) => {
     keys.ArrowRight = false;
 });
 
-let stratScreen = document.getElementById('start-screen');
+let startScreen = document.getElementById('start-screen');
 let gameOverScreen = document.getElementById('game-over-screen');
 let hud = document.getElementById('hud');
 let scoreDisplay = document.getElementById('score');
@@ -37,6 +37,37 @@ let restartBtn= document.getElementById('restart-btn');
 
 let gameState = "START";
 let score = 0;
+let maxAltitude = 0;
+
+//--sounds
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    if (type === 'jump') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1);
+
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.1, audioCtx.currentTime + 0.1);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    } else if (type === 'death') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+    }
+}
 
 let GAME_WIDTH = canvas.parentElement.clientWidth;
 let GAME_HEIGHT = canvas.parentElement.clientHeight;
@@ -126,47 +157,66 @@ restartBtn.addEventListener('click', startGame);
 
 function gameLoop() {
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    if (gameState === "PLAYING")
 
-    player.vx = 0;
-    if (keys.ArrowLeft || keys.a) player.vx = -player.speed;
-    if (keys.ArrowRight || keys.d) player.vx = player.speed;
+    if (gameState === "PLAYING") {
 
-    player.x += player.vx
+        player.vx = 0;
+        if (keys.ArrowLeft || keys.a) player.vx = -player.speed;
+        if (keys.ArrowRight || keys.d) player.vx = player.speed;
 
-    if (player.x > GAME_WIDTH) {
-        player.x = -player.width;
-    } else if (player.x + player.width < 0) {
-        player.x = GAME_WIDTH;
-    }
+        player.x += player.vx;
 
-    player.vy += player.gravity;
-    player.y += player.vy;
+        if (player.x > GAME_WIDTH) {
+                player.x = -player.width;
+        } else if (player.x + player.width < 0) {
+                player.x = GAME_WIDTH;
+        }
 
-    if (player.vy > 0) {
-        platforms.forEach(plat => {
-            if (player.x < plat.x + plat.width && 
-                player.x + player.width > plat.x &&
-                player.y + player.height > plat.y &&
-                player.y + player.height < plat.y + plat.height + player.vy) {
+        player.vy += player.gravity;
+        player.y += player.vy;
 
-            player.y = plat.y - player.height;
-            player.vy = player.jumpForce;
+        if (player.vy > 0) {
+            platforms.forEach(plat => {
+                if (player.x < plat.x + plat.width &&
+                    player.x + player.width > plat.x &&
+                    player.y + player.height > plat.y &&
+                    player.y + player.height < plat.y + plat.height + player.vy) {
+
+                    player.y = plat.y - player.height;
+                    player.vy = player.jumpForce;
+                    playSound('jump');
                 }
-        });
-    }
-    
-    if (player.y < GAME_HEIGHT / 2) {
-        let diff = (GAME_HEIGHT / 2) - player.y;
-        player.y += diff;
+            });
+         }
 
-        platforms.forEach(plat => {
-            plat.y += diff;
-        });
-        let highestPlatform = platforms[platforms.length - 1];
-        if (highestPlatform.y > 0) {
-            let randomX = Math.random() * (GAME_WIDTH - 100);
-            platforms.push(new Platform(randomX, highestPlatform.y - 120));
+        if (player.y < GAME_HEIGHT / 2) {
+            let diff = (GAME_HEIGHT / 2) - player.y;
+            player.y += diff;
+
+            maxAltitude += diff;
+
+            let calculatedScore = Math.floor(maxAltitude / 10);
+            if (calculatedScore > score) {
+                score = calculatedScore;
+                scoreDisplay.innerText = score;
+            }
+
+            platforms.forEach(plat => {
+                plat.y += diff;
+            });
+                
+            let highestPlatform = platforms[platforms.length - 1];
+            if (highestPlatform.y > 0) {
+                let randomX = Math.random() * (GAME_WIDTH - 100);
+                platforms.push(new Platform(randomX, highestPlatform.y - 120));
+            }
+        }
+        if (player.y > GAME_HEIGHT) {
+            gameState = "GAMEOVER";
+            hud.classList.add('hidden');
+            gameOverScreen.classList.remove('hidden');
+            finalScoreDisplay.innerText = score;
+            playSound('death');
         }
     }
     platforms = platforms.filter(plat => plat.y < GAME_HEIGHT + 100);
@@ -178,12 +228,6 @@ function gameLoop() {
     ctx.strokeStyle = '#000';
     ctx.strokeRect(player.x, player.y, player.width, player.height);
 
-    if (player.y > GAME_HEIGHT) {
-        gameState = "GAMEOVER";
-        hud.classList.add('hidden');
-        gameOverScreen.classList.remove('hidden');
-        finalScoreDisplay.innerText = score;
-    }
     requestAnimationFrame(gameLoop);
 }
 gameLoop();
