@@ -40,6 +40,15 @@ let score = 0;
 let maxAltitude = 0;
 let shakeTime = 0;
 let particles = [];
+let stars = [];
+for (let i = 0; i < 60; i++) {
+    stars.push({
+        x: Math.random() * 2000,
+        y: Math.random() * 2000,
+        size: Math.random() * 2 + 1,
+        speed: Math.random() * 0.4 + 1 //for 3d effect
+    });
+}
 
 //--sounds
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -261,6 +270,20 @@ function gameLoop() {
 
             maxAltitude += diff;
 
+            stars.forEach(star => {
+                star.y += diff * star.speed;
+                if (star.y > GAME_HEIGHT) {
+                    star.y = 0;
+                    star.x = Math.random() * GAME_WIDTH;
+                }
+            });
+            //shift in skky colors
+            let lightness = Math.max(10, 75 - (maxAltitude / 200));
+            let hue = (200 + (maxAltitude / 100)) % 360;
+
+            document.getElementById('sky-background').style.background = 
+            `linear-gradient(to bottom, hsl(${hue}, 50%. 10%), hsl(${hue}, 40%, ${lightness}%))`;
+
             let calculatedScore = Math.floor(maxAltitude / 10);
             if (calculatedScore > score) {
                 score = calculatedScore;
@@ -287,6 +310,13 @@ function gameLoop() {
             playSound('death');
         }
     }
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    stars.forEach(star => {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
     platforms = platforms.filter(plat => plat.y < GAME_HEIGHT + 100);
     platforms.forEach(plat => plat.draw(ctx));
 
@@ -299,7 +329,7 @@ function gameLoop() {
     particles.forEach(p => p.update());
     particles = particles.filter(p => p.life > 0);
     particles.forEach(p => p.draw(ctx));
-    
+
     ctx.restore();
 
     requestAnimationFrame(gameLoop);
