@@ -94,34 +94,48 @@ let player = {
 let platforms = [];
 
 class Platform {
-    constructor(x, y) {
+    constructor(x, y, type = 0) {
         this.x = x; this.y = y;
         this.width = 100;
         this.height = 20;
+        this.type = type; //0 is normal, 1=moving, 2=fragile, 3=bouncing
+
+        this.vx = (Math.random() > 0.5 ? 2 : -2);
+        this.isBroken = false;
+    }
+    update() {
+        if (this.type === 1) {
+            this.x += this.vx;
+            if (this.x < 0 || this.x + this.width > GAME_WIDTH) {
+                this.vx *= -1;
+            }
+        }
     }
     draw(ctx) {
-        ctx.fillStyle = '#8397a7';
+        if (this.isBroken) return;
+
+        if (this.type === 0) ctx.fillStyle = '#8397a7'; //normal rock
+        if (this.type === 1) ctx.fillStyle = '#e67357'; //moving
+        if (this.type === 2) ctx.fillStyle = '#a6b1e1'; //fragile
+        if (this.type === 3) ctx.fillStyle = '#80ed99'; //bouncing
 
         ctx.beginPath();
         ctx.moveTo(this.x, this.y);
         ctx.lineTo(this.x + this.width, this.y + 4);
-
         ctx.lineTo(this.x + this.width - 8, this.y + this.height);
-
         ctx.lineTo(this.x + 12, this.y + this.height + 6);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = '#c1c9ce';
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y);
-        ctx.lineTo(this.x + this.width, this.y + 4);
-        ctx.lineTo(this.x + this.width - 5, this.y + 8);
-        ctx.lineTo(this.x + 5, this.y + 5);
         ctx.closePath();
         ctx.fill();
     }
 }
+function getRandomType() {
+    let r = Math.random();
+    if (r < 0.70) return 0;
+    if (r < 0.80) return 1;
+    if (r < 0.90) return 2;
+    return 3;
+}
+
 function generateStartingPlatforms() {
     platforms = [];
     platforms.push(new Platform(GAME_WIDTH / 2 - 50, GAME_HEIGHT - 50));
@@ -130,7 +144,7 @@ function generateStartingPlatforms() {
 
     while(currentY > 0) {
         let randomX = Math.random() * (GAME_WIDTH - 100);
-        platforms.push(new Platform(randomX, currentY));
+        platforms.push(new Platform(randomX, currentY, getRandomType()));
 
         currentY -= Math.random() * 60 + 80;
     }
@@ -173,18 +187,29 @@ function gameLoop() {
         }
 
         player.vy += player.gravity;
+        platforms.forEach(plat => plat.update());
+
         player.y += player.vy;
 
         if (player.vy > 0) {
             platforms.forEach(plat => {
-                if (player.x < plat.x + plat.width &&
+                if (!plat.isBroken && player.x  < plat.x + plat.width &&
                     player.x + player.width > plat.x &&
                     player.y + player.height > plat.y &&
                     player.y + player.height < plat.y + plat.height + player.vy) {
 
                     player.y = plat.y - player.height;
-                    player.vy = player.jumpForce;
-                    playSound('jump');
+                    
+                    if (plat.type === 3) {
+                        player.vy = player.jumpForce * 1.5;
+                        playSound('jump');
+                    } else {
+                        player.vy = player.jumpForce;
+                        playSound('jump');
+                    }
+                    if (plat.type === 2) {
+                        plat.isBroken = true;
+                    }
                 }
             });
          }
@@ -208,7 +233,7 @@ function gameLoop() {
             let highestPlatform = platforms[platforms.length - 1];
             if (highestPlatform.y > 0) {
                 let randomX = Math.random() * (GAME_WIDTH - 100);
-                platforms.push(new Platform(randomX, highestPlatform.y - 120));
+                platforms.push(new Platform(randomX, highestPlatform.y - 120, getRandomType()));
             }
         }
         if (player.y > GAME_HEIGHT) {
