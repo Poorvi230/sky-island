@@ -38,6 +38,7 @@ let restartBtn= document.getElementById('restart-btn');
 
 let gameState = "START";
 let score = 0;
+let bestScore = localStorage.getItem('skyIslandBest') || 0;
 let maxAltitude = 0;
 let shakeTime = 0;
 let particles = [];
@@ -50,6 +51,7 @@ for (let i = 0; i < 60; i++) {
         speed: Math.random() * 0.4 + 1 //for 3d effect
     });
 }
+let powerups = [];
 let lasers = [];
 let birds = [];
 
@@ -149,7 +151,8 @@ let player = {
     width: 40, height: 40, vy: 0,
     gravity: 0.8, vx: 0, 
     speed: 9,
-    jumpForce: -17
+    jumpForce: -17,
+    jetpackTime: 0
 };
 
 let platforms = [];
@@ -246,6 +249,8 @@ function startGame() {
     wallY = GAME_HEIGHT + 300;
     birds = [];
     lasers = [];
+    powerups = [];
+    player.jetpackTime = 0;
     scoreDisplay.innerText = score;
 
     player.x = GAME_WIDTH / 2 - 20;
@@ -292,7 +297,14 @@ function gameLoop() {
                 player.x = GAME_WIDTH;
         }
 
-        player.vy += player.gravity;
+        if (player.jetpackTime > 0) {
+            player.vy = -25;
+            player.jetpackTime--;
+            shakeTime = 2;
+            spawnParticles(player.x + 20, player.y + player.height, '#00f0ff', 4);
+        } else {
+            player.vy += player.gravity;
+        }
         platforms.forEach(plat => plat.update());
 
         player.y += player.vy;
@@ -350,8 +362,13 @@ function gameLoop() {
             if (calculatedScore > score) {
                 score = calculatedScore;
                 scoreDisplay.innerText = score;
+                if (score > bestScore) {
+                    bestScore = score;
+                    localStorage.setItem('skyIslandBest', bestScore);
+                }
             }
 
+            powerups.forEach(p => { p.y += diff; });
             platforms.forEach(plat => {
                 plat.y += diff;
             });
@@ -364,6 +381,10 @@ function gameLoop() {
                 let randomX = Math.random() * (GAME_WIDTH - 100);
                 platforms.push(new Platform(randomX, highestPlatform.y - 120, getRandomType()));
                 
+            if (Math.random() < 0.05) {
+                powerups.push({ x: randomX + 40, y: highestPlatform.y - 180, active: true });
+            }
+
                 let birdChance = 0.02 + Math.min(score / 500, 1) * 0.38;
                 if (Math.random() < birdChance) {
                     birds.push(new Bird(Math.random() * (GAME_HEIGHT / 2)));
@@ -395,13 +416,21 @@ function gameLoop() {
                 player.y + player.height > bird.y) {
                 
                 // death..
+            if (player.jetpackTime > 0) {
+                bird.isDead = true;
+                spawnParticles(bird.x + bird.width/2, bird.y, '#e67357', 20);
+            } else {
                 gameState = "GAMEOVER";
                 hud.classList.add('hidden');
                 gameOverScreen.classList.remove('hidden');
+
                 finalScoreDisplay.innerText = score;
+                document.getElementById('best-score').innerText = bestScore;
+
                 shakeTime = 20;
                 spawnParticles(player.x, player.y, '#FF007F', 40);
                 playSound('death');
+            }
             }
         });
         wallY -= 0.5;
@@ -415,6 +444,7 @@ function gameLoop() {
             hud.classList.add('hidden');
             gameOverScreen.classList.remove('hidden');
             finalScoreDisplay.innerText = score;
+            document.getElementById('best-score').innerText = bestScore;
             shakeTime = 20;
             spawnParticles(player.x, player.y, '#FF007F', 40);
             playSound('death');
@@ -440,6 +470,22 @@ function gameLoop() {
     ctx.fillRect(0, wallY, GAME_WIDTH, GAME_HEIGHT);
     ctx.fillStyle = '#ff0032';
     ctx.fillRect(0, wallY, GAME_WIDTH, 5);
+
+    powerups.forEach(p => {
+        if (!p.active) return;
+        ctx.fillStyle = '#00f0ff';
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 15;
+        ctx.fillRect(p.x, p.y, 20, 20);
+        ctx.shadowBlur = 0;
+
+        if (player.x < p.x + 20 && player.x + player.width > p.x && 
+        player.y < p.y + 20 && player.y + player.height > p.y) {
+            p.active = false;
+            player.jetpackTime = 120;
+            playSound('jump');
+         }
+    });
 
 
     birds.forEach(b => b.draw(ctx));
