@@ -1,5 +1,6 @@
 let canvas = document.getElementById('gameCanvas');
 let ctx = canvas.getContext('2d');
+let wallY = GAME_HEIGHT;
 
 let keys = {
     ArrowLeft: false,
@@ -49,6 +50,45 @@ for (let i = 0; i < 60; i++) {
         speed: Math.random() * 0.4 + 1 //for 3d effect
     });
 }
+let lasers = [];
+let birds = [];
+
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && gameState === 'PLAYING') {
+        lasers.push({ x: player.x + player.width/2 - 2, y: player.y, vy: -15 });
+        playSound('laser');
+    }
+});
+
+class Bird {
+    constructor(y) {
+        this.y = y;
+        this.width = 30;
+        this.height = 20;
+        this.isMovingRight = Math.random() > 0.5;
+        this.x = this.isMovingRight ? -50 : GAME_WIDTH + 50;
+        this.vx = (this.isMovingRight ? 1 : -1) * (2 + Math.random() * 3);
+        this.isDead = false;
+    }
+    update() {
+        this.x += this.vx;
+    }
+    draw(ctx) {
+        if (this.isDead) return;
+        ctx.fillStyle = '#e67357';
+        ctx.beginPath();
+        if (this.isMovingRight) {
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x + this.width, this.y + this.height/2);
+            ctx.lineTo(this.x, this.y + this.height);
+        } else {
+            ctx.moveTo(this.x + this.width, this.y);
+            ctx.lineTo(this.x, this.y + this.height/2);
+            ctx.lineTo(this.x + this.width, this.y + this.height);
+        }
+        ctx.fill();
+    }
+}
 
 //--sounds
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -71,6 +111,17 @@ function playSound(type) {
         gainNode.gain.exponentialRampToValueAtTime(0.1, audioCtx.currentTime + 0.1);
         osc.start();
         osc.stop(audioCtx.currentTime + 0.1);
+
+    } else if (type === 'laser') { 
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+
     } else if (type === 'death') {
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(200, audioCtx.currentTime);
@@ -83,7 +134,6 @@ function playSound(type) {
 let GAME_WIDTH = canvas.parentElement.clientWidth;
 let GAME_HEIGHT = canvas.parentElement.clientHeight;
 
-//not mobile friendly mann
 function resize() {
     GAME_WIDTH = canvas.parentElement.clientWidth;
     GAME_HEIGHT = canvas.parentElement.clientHeight;
@@ -97,9 +147,9 @@ let player = {
     x: GAME_WIDTH / 2 - 20,
     y: 100,
     width: 40, height: 40, vy: 0,
-    gravity: 0.4, vx: 0, 
-    speed: 6,
-    jumpForce: -13
+    gravity: 0.8, vx: 0, 
+    speed: 9,
+    jumpForce: -17
 };
 
 let platforms = [];
@@ -193,6 +243,9 @@ generateStartingPlatforms();
 function startGame() {
     gameState = "PLAYING";
     score = 0;
+    wallY = GAME_HEIGHT + 300;
+    birds = [];
+    lasers = [];
     scoreDisplay.innerText = score;
 
     player.x = GAME_WIDTH / 2 - 20;
@@ -270,6 +323,8 @@ function gameLoop() {
 
             maxAltitude += diff;
 
+            wallY += diff * 0.8;
+
             stars.forEach(star => {
                 star.y += diff * star.speed;
                 if (star.y > GAME_HEIGHT) {
@@ -282,7 +337,7 @@ function gameLoop() {
             let hue = (200 + (maxAltitude / 100)) % 360;
 
             document.getElementById('sky-background').style.background = 
-            `linear-gradient(to bottom, hsl(${hue}, 50%. 10%), hsl(${hue}, 40%, ${lightness}%))`;
+            `linear-gradient(to bottom, hsl(${hue}, 50%, 10%), hsl(${hue}, 40%, ${lightness}%))`;
 
             let calculatedScore = Math.floor(maxAltitude / 10);
             if (calculatedScore > score) {
@@ -293,13 +348,60 @@ function gameLoop() {
             platforms.forEach(plat => {
                 plat.y += diff;
             });
+            birds.forEach(bird => {
+                bird.y += diff;
+            });
                 
             let highestPlatform = platforms[platforms.length - 1];
             if (highestPlatform.y > 0) {
                 let randomX = Math.random() * (GAME_WIDTH - 100);
                 platforms.push(new Platform(randomX, highestPlatform.y - 120, getRandomType()));
+                
+                if (Math.random() < 0.15) {
+                    birds.push(new Bird(Math.random() * (GAME_HEIGHT / 2)));
+                }
             }
         }
+        // --- enemies entry
+        lasers.forEach(laser => laser.y += laser.vy);
+        
+        birds.forEach(bird => {
+            bird.update();
+            
+            lasers.forEach(laser => {
+                if (!bird.isDead && laser.x > bird.x && laser.x < bird.x + bird.width &&
+                    laser.y < bird.y + bird.height && laser.y > bird.y) {
+                    
+                    bird.isDead = true;
+                    laser.y = -999; 
+                    spawnParticles(bird.x + bird.width/2, bird.y, '#e67357', 20);
+                    shakeTime = 5;
+                    score += 50; // Bonus points
+                    scoreDisplay.innerText = score;
+                }
+            });
+
+            if (!bird.isDead && player.x < bird.x + bird.width && 
+                player.x + player.width > bird.x &&
+                player.y < bird.y + bird.height &&
+                player.y + player.height > bird.y) {
+                
+                // death..
+                gameState = "GAMEOVER";
+                hud.classList.add('hidden');
+                gameOverScreen.classList.remove('hidden');
+                finalScoreDisplay.innerText = score;
+                shakeTime = 20;
+                spawnParticles(player.x, player.y, '#FF007F', 40);
+                playSound('death');
+            }
+        });
+        wallY -= 0.5;
+        if (player.y + player.height > wallY) {
+            player.y = GAME_HEIGHT + 100;
+        }
+
+        // --- d by fallin
         if (player.y > GAME_HEIGHT) {
             gameState = "GAMEOVER";
             hud.classList.add('hidden');
@@ -325,6 +427,18 @@ function gameLoop() {
     ctx.lineWidth = 4;
     ctx.strokeStyle = '#000';
     ctx.strokeRect(player.x, player.y, player.width, player.height);
+
+    ctx.fillStyle = 'rgba(255, 0, 50, 0.4)';
+    ctx.fillRect(0, wallY, GAME_WIDTH, GAME_HEIGHT);
+    ctx.fillStyle = '#ff0032';
+    ctx.fillRect(0, wallY, GAME_WIDTH, 5);
+
+
+    birds.forEach(b => b.draw(ctx));
+    lasers.forEach(l => {
+        ctx.fillStyle = '#80ed99';
+        ctx.fillRect(l.x, l.y, 4, 15);
+    });
 
     particles.forEach(p => p.update());
     particles = particles.filter(p => p.life > 0);
