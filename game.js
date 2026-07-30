@@ -36,9 +36,11 @@ let finalScoreDisplay = document.getElementById('final-score');
 let startBtn = document.getElementById('start-btn');
 let restartBtn= document.getElementById('restart-btn');
 
+let coins = [];
+let runCoins = 0;
 let gameState = "START";
 let score = 0;
-let bestScore = localStorage.getItem('skyIslandBest') || 0;
+let bestScore = sessionStorage.getItem('skyIslandBest') || 0;
 let maxAltitude = 0;
 let shakeTime = 0;
 let particles = [];
@@ -123,7 +125,13 @@ function playSound(type) {
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
             osc.start();
             osc.stop(audioCtx.currentTime + 0.1);
-
+    } else if (type === 'coin') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
     } else if (type === 'death') {
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(200, audioCtx.currentTime);
@@ -246,12 +254,16 @@ generateStartingPlatforms();
 function startGame() {
     gameState = "PLAYING";
     score = 0;
+    maxAltitude = 0;
+    coins = [];
+    runCoins = 0;
     wallY = GAME_HEIGHT + 300;
     birds = [];
     lasers = [];
     powerups = [];
     player.jetpackTime = 0;
     scoreDisplay.innerText = score;
+    document.getElementById('hud-coins').innerText = runCoins;
 
     player.x = GAME_WIDTH / 2 - 20;
     player.y = GAME_HEIGHT / 2;
@@ -364,11 +376,12 @@ function gameLoop() {
                 scoreDisplay.innerText = score;
                 if (score > bestScore) {
                     bestScore = score;
-                    localStorage.setItem('skyIslandBest', bestScore);
+                    sessionStorage.setItem('skyIslandBest', bestScore);
                 }
             }
 
             powerups.forEach(p => { p.y += diff; });
+            coins.forEach(c => { c.y += diff; });
             platforms.forEach(plat => {
                 plat.y += diff;
             });
@@ -383,6 +396,9 @@ function gameLoop() {
                 
             if (Math.random() < 0.05) {
                 powerups.push({ x: randomX + 40, y: highestPlatform.y - 180, active: true });
+            }
+            if (Math.random() < 0.30) {
+                coins.push({ x: randomX + 40, y: highestPlatform.y - 40, active: true, angle: 0 });
             }
 
                 let birdChance = 0.02 + Math.min(score / 500, 1) * 0.38;
@@ -497,6 +513,30 @@ function gameLoop() {
     particles.forEach(p => p.update());
     particles = particles.filter(p => p.life > 0);
     particles.forEach(p => p.draw(ctx));
+
+    //--coins
+    coins.forEach(c => {
+        if (!c.active) return;
+        c.angle += 0.1;
+
+        ctx.fillStyle = '#FFD700';
+        ctx.shadowColor = '#FFA500';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+
+        ctx.ellipse(c.x, c.y, Math.max(1, 10 * Math.abs(Math.cos(c.angle))), 15, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        if (player.x < c.x + 10 && player.x + player.width > c.x - 10 &&
+            player.y < c.y + 15 && player.y + player.height > c.y - 15) {
+                c.active = false;
+                runCoins++;
+                document.getElementById('hud-coins').innerText = runCoins;
+                playSound('coin');
+            }
+    });
+    coins = coins.filter(c => c.active && c.y < GAME_HEIGHT + 100);
 
     ctx.restore();
 
