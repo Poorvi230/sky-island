@@ -98,3 +98,22 @@ button {
 .hidden {
     display: none !important;
 }
+/*start screen */
+.rock-shape {
+    position: absolute;
+    clip-path: polygon(15% 0%, 100% 25%, 85% 100%, 0% 75%);
+    opacity: 0.9;
+    z-index: 10;
+}
+#start-screen h1, #start-screen .controls-info, #start-screen button {
+    position: relative;
+    z-index: 10;
+}
+#start-screen {
+    overflow: hidden;
+    transition: transform 0.8s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.8s ease-in;
+}
+#start-screen.zoom-in {
+    transform: scale(15);
+    opacity: 0; pointer-events: none;
+}

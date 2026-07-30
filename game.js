@@ -1,6 +1,6 @@
 let canvas = document.getElementById('gameCanvas');
 let ctx = canvas.getContext('2d');
-let wallY = GAME_HEIGHT;
+let wallY = 0;
 
 let keys = {
     ArrowLeft: false,
@@ -254,11 +254,18 @@ function startGame() {
 
     generateStartingPlatforms();
 
-    startScreen.classList.add('hidden');
     gameOverScreen.classList.add('hidden');
     hud.classList.remove('hidden');
 }
-startBtn.addEventListener('click', startGame);
+startBtn.addEventListener('click', () => {
+    playSound('jump');
+    startScreen.classList.add('zoom-in');
+
+    setTimeout(() => {
+        startScreen.classList.add('hidden');
+        startGame();
+    }, 800);
+});
 restartBtn.addEventListener('click', startGame);
 
 function gameLoop() {
@@ -357,7 +364,8 @@ function gameLoop() {
                 let randomX = Math.random() * (GAME_WIDTH - 100);
                 platforms.push(new Platform(randomX, highestPlatform.y - 120, getRandomType()));
                 
-                if (Math.random() < 0.15) {
+                let birdChance = 0.02 + Math.min(score / 500, 1) * 0.38;
+                if (Math.random() < birdChance) {
                     birds.push(new Bird(Math.random() * (GAME_HEIGHT / 2)));
                 }
             }
@@ -449,3 +457,18 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 gameLoop();
+
+for (let i = 0; i < 40; i++) {
+    let r = document.createElement('div');
+    r.className = 'rock-shape';
+
+    r.style.left = (Math.random() * 120 - 10) + '%';
+    r.style.top = (Math.random() * 120 - 10) + '%';
+    r.style.width = (Math.random() * 80 + 40) + 'px';
+    r.style.height = (Math.random() * 80 + 40) + 'px';
+
+    let colors = ['#8397a7', '#e67357', '#a6b1e1', '#80ed99'];
+    r.style.background = colors[Math.floor(Math.random() * colors.length)];
+    r.style.transform = `rotate(${Math.random() * 360}deg)`;
+    startScreen.appendChild(r);
+}
