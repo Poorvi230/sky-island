@@ -33,8 +33,8 @@ let hud = document.getElementById('hud');
 let scoreDisplay = document.getElementById('score');
 let finalScoreDisplay = document.getElementById('final-score');
 
-let startBtn = document.getElementById('start-btn');
-let restartBtn= document.getElementById('restart-btn');
+var startBtn = document.getElementById('start-btn');
+var restartBtn= document.getElementById('restart-btn');
 
 let coins = [];
 let runCoins = 0;
@@ -252,6 +252,7 @@ function generateStartingPlatforms() {
 generateStartingPlatforms();
 
 function startGame() {
+    console.log("Game started");
     gameState = "PLAYING";
     score = 0;
     maxAltitude = 0;
@@ -310,6 +311,7 @@ function gameLoop() {
         }
 
         if (player.jetpackTime > 0) {
+            // player.vy = -10; // too slow
             player.vy = -25;
             player.jetpackTime--;
             shakeTime = 2;
@@ -514,7 +516,7 @@ function gameLoop() {
     particles = particles.filter(p => p.life > 0);
     particles.forEach(p => p.draw(ctx));
 
-    //--coins
+    //--coins collectibiles
     coins.forEach(c => {
         if (!c.active) return;
         c.angle += 0.1;
@@ -558,3 +560,22 @@ for (let i = 0; i < 40; i++) {
     r.style.transform = `rotate(${Math.random() * 360}deg)`;
     startScreen.appendChild(r);
 }
+//shop
+let shopBtn = document.getElementById('shop-btn');
+let closeShopBtn = document.getElementById('close-shop-btn');
+let shopScreen = document.getElementById('shop-screen')
+let bankDisplay = document.getElementById('bank-coins');
+
+shopBtn.addEventListener('click', () => {
+    startScreen.classList.add('hidden');
+    shopScreen.classList.remove('hidden');
+    bankDisplay.innerText = totalCoins;
+
+    if (ownsCyan) {
+        document.getElementById('skin-cyan').querySelector('p').innerHTML = "Cyan lit<br>Owned!";
+    }
+});
+closeShopBtn.addEventListener('click', () => {
+    shopScreen.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+});
