@@ -267,6 +267,8 @@ function startGame() {
     lasers = [];
     powerups = [];
     player.jetpackTime = 0;
+    player.magnetTime = 0;
+    player.hasShield = false;
     scoreDisplay.innerText = score;
     document.getElementById('hud-coins').innerText = runCoins;
 
@@ -400,9 +402,9 @@ function gameLoop() {
                 let randomX = Math.random() * (GAME_WIDTH - 100);
                 platforms.push(new Platform(randomX, highestPlatform.y - 120, getRandomType()));
                 
-            if (Math.random() < 0.05) {
-                powerups.push({ x: randomX + 40, y: highestPlatform.y - 180, active: true });
-            }
+            let pType = Math.floor(Math.random() * 3);
+                powerups.push({ x: randomX + 40, y: highestPlatform.y - 180, active: true, type: pType });
+            
             if (Math.random() < 0.30) {
                 coins.push({ x: randomX + 40, y: highestPlatform.y - 40, active: true, angle: 0 });
             }
@@ -442,7 +444,17 @@ function gameLoop() {
             if (player.jetpackTime > 0) {
                 bird.isDead = true;
                 spawnParticles(bird.x + bird.width/2, bird.y, '#e67357', 20);
-            } else {
+
+                if (player.jetPackTime > 0) {
+                    bird.isDead = true;
+                    spawnParticles(bird.x + bird.width/2, bird.y, '#e67357', 20);     
+                } else if (player.jetpackTime > 0) {
+                    bird.isDead = true;
+                    player.hasShield = false;
+                    shakeTime = 10;
+                    playSound('laser');
+                    spawnParticles(player.x, player.y, '#4169E1', 40);
+                } else {
                 gameState = "GAMEOVER";
                 hud.classList.add('hidden');
                 gameOverScreen.classList.remove('hidden');
@@ -503,6 +515,15 @@ function gameLoop() {
     ctx.fillStyle = '#000';
     ctx.fillRect(isMovingLeft ? px + 12 : px + 24, py + 10, 4, 4);
 
+    if (player.hasShield) {
+        ctx.beginPath();
+        ctx.arc(px + 20, py + 20, 30, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(65, 105, 225, 0.8)';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(65, 105, 225, 0.3)'
+    }
+
 
     ctx.fillStyle = 'rgba(255, 0, 50, 0.4)';
     ctx.fillRect(0, wallY, GAME_WIDTH, GAME_HEIGHT);
@@ -511,10 +532,17 @@ function gameLoop() {
 
     powerups.forEach(p => {
         if (!p.active) return;
-        ctx.fillStyle = '#00f0ff';
-        ctx.shadowColor = '#00f0ff';
+
+        if (pType === 0 || p.type === undefined) ctx.fillStyle = '#00f0ff';
+        else if (p.type === 1) ctx.fillStyle = '#FFD700';
+        else ctx.fillStyle = '#4169E1';
+        
+        ctx.shadowColor = ctx.fillStyle;
         ctx.shadowBlur = 15;
-        ctx.fillRect(p.x, p.y, 20, 20);
+
+        ctx.beginPath();
+        ctx.arc(p.x + 10, p.y + 10, 10, 0, Math.PI * 2);
+        ctx.fill();
         ctx.shadowBlur = 0;
 
         if (player.x < p.x + 20 && player.x + player.width > p.x && 
@@ -522,6 +550,10 @@ function gameLoop() {
             p.active = false;
             player.jetpackTime = 120;
             playSound('jump');
+
+            if (p.type === 0 || p.type === undefined) player.jetpackTime = 120;
+            if (p.type === 1) player.magnetTime = 300;
+            if (p.type === 2) player.hasShield = true;
          }
     });
 
@@ -539,6 +571,18 @@ function gameLoop() {
     //--coins collectibiles
     coins.forEach(c => {
         if (!c.active) return;
+
+        if (player.magnetTime > 0) {
+            player.magnetTime--;
+            let dx = (player.x + 20) - c.x;
+            let dy = (player.y + 20) - c.y;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            
+            if (dist < 250) {
+                c.x += (dx / dist) * 12;
+                c.y += (dy / dist) * 12;
+            }
+        }
         c.angle += 0.1;
 
         ctx.fillStyle = '#FFD700';
