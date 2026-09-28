@@ -40,6 +40,10 @@ let coins = [];
 let runCoins = 0;
 let gameState = "START";
 let score = 0;
+let totalCoins = parseInt(localStorage.getItem('skyIslandCoins')) || 0;
+let playerColor = localStorage.getItem('skyIslandSkin') || '#FF007F';
+let ownsCyan = localStorage.getItem('skyIslandCyanSkin') === 'true';
+
 let bestScore = sessionStorage.getItem('skyIslandBest') || 0;
 let maxAltitude = 0;
 let shakeTime = 0;
@@ -431,6 +435,7 @@ function gameLoop() {
             if (!bird.isDead && player.x < bird.x + bird.width && 
                 player.x + player.width > bird.x &&
                 player.y < bird.y + bird.height &&
+                player.y + hitMargin < bird.y + bird.height &&
                 player.y + player.height > bird.y) {
                 
                 // death..
@@ -478,11 +483,26 @@ function gameLoop() {
     platforms = platforms.filter(plat => plat.y < GAME_HEIGHT + 100);
     platforms.forEach(plat => plat.draw(ctx));
 
-    ctx.fillStyle = '#FF007F';
-    ctx.fillRect(player.x, player.y, player.width, player.height);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#000';
-    ctx.strokeRect(player.x, player.y, player.width, player.height);
+    // our pixl birdie
+    let px = player.x;
+    let py = player.y;
+    let isMovingLeft = player.vx < 0;
+
+    ctx.fillStyle = playerColor;
+    ctx.fillRect(px + 8, py + 8, 24, 24);
+
+    ctx.fillStyle = '#333';
+    ctx.fillRect(isMovingLeft ? px + 32 : px + 4, py + 16, 4, 8);
+
+    ctx.fillStyle = player.vy < 0 ? '#fff' : '#ddd';
+    ctx.fillRect(px + 12, player.vy < 0 ? py + 12 : py + 16, 16, 8)
+
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(isMovingLeft ? px : px + 32, py + 12, 8, 6);
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(isMovingLeft ? px + 12 : px + 24, py + 10, 4, 4);
+
 
     ctx.fillStyle = 'rgba(255, 0, 50, 0.4)';
     ctx.fillRect(0, wallY, GAME_WIDTH, GAME_HEIGHT);
@@ -539,6 +559,9 @@ function gameLoop() {
             }
     });
     coins = coins.filter(c => c.active && c.y < GAME_HEIGHT + 100);
+    birds = birds.filter(b => b.y < GAME_HEIGHT + 100 && !b.isDead);
+    lasers = lasers.filter(l => l.y > -100);
+    powerups = powerups.filter(p => p.y < GAME_HEIGHT + 120);
 
     ctx.restore();
 
@@ -578,4 +601,30 @@ shopBtn.addEventListener('click', () => {
 closeShopBtn.addEventListener('click', () => {
     shopScreen.classList.add('hidden');
     startScreen.classList.remove('hidden');
+});
+//equipping skin
+document.getElementById('skin-pink').addEventListener('click', () => {
+    playerColor = '#FF007F';
+    localStorage.setItem('skyIslandSkin', playerColor);
+    playSound('jump');
+});
+
+document.getElementById('skin-cyan').addEventListener('click', () => {
+    if (ownsCyan) {
+        playerColor = '#00f0ff';
+        localStorage.setItem('skyIslandSkin', playerColor);
+        playSound('jump');
+    } else if (totalCoins >= 50) {
+        totalCoins -= 50;
+        localStorage.setItem('skyIslandCyanSkin', totalCoins);
+        ownsCyan = true;
+        localStorage.setItem('skyIslandCyanSkin', 'true');
+
+        playerColor = '#00f0ff';
+        localStorage.setItem('skyIslandSkin', playerColor);
+
+        bankDisplay.innerText = totalCoins;
+        document.getElementById('skin-cyan').querySelector('p').innerHTML = "Cyan Shine<br>Owned!";
+        playSound('coin');
+    }
 });
