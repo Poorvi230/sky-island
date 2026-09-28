@@ -34,7 +34,7 @@ let scoreDisplay = document.getElementById('score');
 let finalScoreDisplay = document.getElementById('final-score');
 
 var startBtn = document.getElementById('start-btn');
-var restartBtn= document.getElementById('restart-btn');
+var restartBtn = document.getElementById('restart-btn');
 
 let coins = [];
 let runCoins = 0;
@@ -63,7 +63,7 @@ let birds = [];
 
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && gameState === 'PLAYING') {
-        lasers.push({ x: player.x + player.width/2 - 2, y: player.y, vy: -15 });
+        lasers.push({ x: player.x + player.width / 2 - 2, y: player.y, vy: -15 });
         playSound('laser');
     }
 });
@@ -87,11 +87,11 @@ class Bird {
         ctx.beginPath();
         if (this.isMovingRight) {
             ctx.moveTo(this.x, this.y);
-            ctx.lineTo(this.x + this.width, this.y + this.height/2);
+            ctx.lineTo(this.x + this.width, this.y + this.height / 2);
             ctx.lineTo(this.x, this.y + this.height);
         } else {
             ctx.moveTo(this.x + this.width, this.y);
-            ctx.lineTo(this.x, this.y + this.height/2);
+            ctx.lineTo(this.x, this.y + this.height / 2);
             ctx.lineTo(this.x + this.width, this.y + this.height);
         }
         ctx.fill();
@@ -120,15 +120,15 @@ function playSound(type) {
         osc.start();
         osc.stop(audioCtx.currentTime + 0.1);
 
-    } else if (type === 'laser') { 
+    } else if (type === 'laser') {
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(800, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
 
-            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
     } else if (type === 'coin') {
         osc.type = 'sine';
         osc.frequency.setValueAtTime(800, audioCtx.currentTime);
@@ -161,7 +161,7 @@ let player = {
     x: GAME_WIDTH / 2 - 20,
     y: 100,
     width: 40, height: 40, vy: 0,
-    gravity: 0.8, vx: 0, 
+    gravity: 0.8, vx: 0,
     speed: 9,
     jumpForce: -17,
     jetpackTime: 0
@@ -246,7 +246,7 @@ function generateStartingPlatforms() {
 
     let currentY = GAME_HEIGHT - 150;
 
-    while(currentY > 0) {
+    while (currentY > 0) {
         let randomX = Math.random() * (GAME_WIDTH - 100);
         platforms.push(new Platform(randomX, currentY, getRandomType()));
 
@@ -311,9 +311,9 @@ function gameLoop() {
         player.x += player.vx;
 
         if (player.x > GAME_WIDTH) {
-                player.x = -player.width;
+            player.x = -player.width;
         } else if (player.x + player.width < 0) {
-                player.x = GAME_WIDTH;
+            player.x = GAME_WIDTH;
         }
 
         if (player.jetpackTime > 0) {
@@ -331,13 +331,13 @@ function gameLoop() {
 
         if (player.vy > 0) {
             platforms.forEach(plat => {
-                if (!plat.isBroken && player.x  < plat.x + plat.width &&
+                if (!plat.isBroken && player.x < plat.x + plat.width &&
                     player.x + player.width > plat.x &&
                     player.y + player.height > plat.y &&
                     player.y + player.height < plat.y + plat.height + player.vy) {
 
                     player.y = plat.y - player.height;
-                    
+
                     if (plat.type === 3) {
                         player.vy = player.jumpForce * 1.5;
                         shakeTime = 8;
@@ -345,16 +345,16 @@ function gameLoop() {
                         playSound('jump');
                     } else {
                         player.vy = player.jumpForce;
-                        spawnParticles(plat.x + plat.width/2, plat.y, '#8387a7', 5);
+                        spawnParticles(plat.x + plat.width / 2, plat.y, '#8387a7', 5);
                         playSound('jump');
                     }
                     if (plat.type === 2) {
                         plat.isBroken = true;
-                        spawnParticles(plat.x + plat.width/2, plat.y, '#a6b1e1', 20);
+                        spawnParticles(plat.x + plat.width / 2, plat.y, '#a6b1e1', 20);
                     }
                 }
             });
-         }
+        }
 
         if (player.y < GAME_HEIGHT / 2) {
             let diff = (GAME_HEIGHT / 2) - player.y;
@@ -375,8 +375,8 @@ function gameLoop() {
             let lightness = Math.max(10, 75 - (maxAltitude / 200));
             let hue = (200 + (maxAltitude / 100)) % 360;
 
-            document.getElementById('sky-background').style.background = 
-            `linear-gradient(to bottom, hsl(${hue}, 50%, 10%), hsl(${hue}, 40%, ${lightness}%))`;
+            document.getElementById('sky-background').style.background =
+                `linear-gradient(to bottom, hsl(${hue}, 50%, 10%), hsl(${hue}, 40%, ${lightness}%))`;
 
             let calculatedScore = Math.floor(maxAltitude / 10);
             if (calculatedScore > score) {
@@ -396,18 +396,19 @@ function gameLoop() {
             birds.forEach(bird => {
                 bird.y += diff;
             });
-                
+
             let highestPlatform = platforms[platforms.length - 1];
             if (highestPlatform.y > 0) {
                 let randomX = Math.random() * (GAME_WIDTH - 100);
                 platforms.push(new Platform(randomX, highestPlatform.y - 120, getRandomType()));
-                
-            let pType = Math.floor(Math.random() * 3);
-                powerups.push({ x: randomX + 40, y: highestPlatform.y - 180, active: true, type: pType });
-            
-            if (Math.random() < 0.30) {
-                coins.push({ x: randomX + 40, y: highestPlatform.y - 40, active: true, angle: 0 });
-            }
+
+                if (Math.random() < 0.05) {
+                    let pType = Math.floor(Math.random() * 3);
+                    powerups.push({ x: randomX + 40, y: highestPlatform.y - 180, active: true, type: pType });
+                }
+                if (Math.random() < 0.30) {
+                    coins.push({ x: randomX + 40, y: highestPlatform.y - 40, active: true, angle: 0 });
+                }
 
                 let birdChance = 0.02 + Math.min(score / 500, 1) * 0.38;
                 if (Math.random() < birdChance) {
@@ -417,55 +418,47 @@ function gameLoop() {
         }
         // --- enemies entry
         lasers.forEach(laser => laser.y += laser.vy);
-        
+
         birds.forEach(bird => {
             bird.update();
-            
+
             lasers.forEach(laser => {
                 if (!bird.isDead && laser.x > bird.x && laser.x < bird.x + bird.width &&
                     laser.y < bird.y + bird.height && laser.y > bird.y) {
-                    
+
                     bird.isDead = true;
-                    laser.y = -999; 
-                    spawnParticles(bird.x + bird.width/2, bird.y, '#e67357', 20);
+                    laser.y = -999;
+                    spawnParticles(bird.x + bird.width / 2, bird.y, '#e67357', 20);
                     shakeTime = 5;
-                    score += 50; // Bonus points
+                    score += 50; // Bonus point
                     scoreDisplay.innerText = score;
                 }
             });
-
-            if (!bird.isDead && player.x < bird.x + bird.width && 
-                player.x + player.width > bird.x &&
-                player.y < bird.y + bird.height &&
+            let hitMargin = 8;
+            if (!bird.isDead && player.x + hitMargin < bird.x + bird.width &&
+                player.x + player.width - hitMargin > bird.x &&
                 player.y + hitMargin < bird.y + bird.height &&
-                player.y + player.height > bird.y) {
-                
-                // death..
-            if (player.jetpackTime > 0) {
-                bird.isDead = true;
-                spawnParticles(bird.x + bird.width/2, bird.y, '#e67357', 20);
+                player.y + player.height - hitMargin > bird.y) {
 
-                if (player.jetPackTime > 0) {
+                if (player.jetpackTime > 0) {
                     bird.isDead = true;
-                    spawnParticles(bird.x + bird.width/2, bird.y, '#e67357', 20);     
-                } else if (player.jetpackTime > 0) {
+                    spawnParticles(bird.x + bird.width / 2, bird.y, '#e67357', 20);
+                } else if (player.hasShield) {
                     bird.isDead = true;
                     player.hasShield = false;
                     shakeTime = 10;
                     playSound('laser');
                     spawnParticles(player.x, player.y, '#4169E1', 40);
                 } else {
-                gameState = "GAMEOVER";
-                hud.classList.add('hidden');
-                gameOverScreen.classList.remove('hidden');
-
-                finalScoreDisplay.innerText = score;
-                document.getElementById('best-score').innerText = bestScore;
-
-                shakeTime = 20;
-                spawnParticles(player.x, player.y, '#FF007F', 40);
-                playSound('death');
-            }
+                    gameState = "GAMEOVER";
+                    hud.classList.add('hidden');
+                    gameOverScreen.classList.remove('hidden');
+                    finalScoreDisplay.innerText = score;
+                    document.getElementById('best-score').innerText = bestScore;
+                    shakeTime = 20;
+                    spawnParticles(player.x, player.y, '#FF007F', 40);
+                    playSound('death');
+                }
             }
         });
         wallY -= 0.5;
@@ -533,10 +526,10 @@ function gameLoop() {
     powerups.forEach(p => {
         if (!p.active) return;
 
-        if (pType === 0 || p.type === undefined) ctx.fillStyle = '#00f0ff';
+        if (p.type === 0 || p.type === undefined) ctx.fillStyle = '#00f0ff';
         else if (p.type === 1) ctx.fillStyle = '#FFD700';
         else ctx.fillStyle = '#4169E1';
-        
+
         ctx.shadowColor = ctx.fillStyle;
         ctx.shadowBlur = 15;
 
@@ -545,16 +538,15 @@ function gameLoop() {
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        if (player.x < p.x + 20 && player.x + player.width > p.x && 
-        player.y < p.y + 20 && player.y + player.height > p.y) {
+        if (player.x < p.x + 20 && player.x + player.width > p.x &&
+            player.y < p.y + 20 && player.y + player.height > p.y) {
             p.active = false;
-            player.jetpackTime = 120;
             playSound('jump');
 
             if (p.type === 0 || p.type === undefined) player.jetpackTime = 120;
             if (p.type === 1) player.magnetTime = 300;
             if (p.type === 2) player.hasShield = true;
-         }
+        }
     });
 
 
@@ -576,9 +568,9 @@ function gameLoop() {
             player.magnetTime--;
             let dx = (player.x + 20) - c.x;
             let dy = (player.y + 20) - c.y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            
-            if (dist < 250) {
+            let dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist > 0 && dist < 250) {
                 c.x += (dx / dist) * 12;
                 c.y += (dy / dist) * 12;
             }
@@ -596,11 +588,11 @@ function gameLoop() {
 
         if (player.x < c.x + 10 && player.x + player.width > c.x - 10 &&
             player.y < c.y + 15 && player.y + player.height > c.y - 15) {
-                c.active = false;
-                runCoins++;
-                document.getElementById('hud-coins').innerText = runCoins;
-                playSound('coin');
-            }
+            c.active = false;
+            runCoins++;
+            document.getElementById('hud-coins').innerText = runCoins;
+            playSound('coin');
+        }
     });
     coins = coins.filter(c => c.active && c.y < GAME_HEIGHT + 100);
     birds = birds.filter(b => b.y < GAME_HEIGHT + 100 && !b.isDead);
