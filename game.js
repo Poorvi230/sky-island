@@ -650,8 +650,8 @@ document.getElementById('skin-cyan').addEventListener('click', () => {
         playerColor = '#00f0ff';
         localStorage.setItem('skyIslandSkin', playerColor);
         playSound('jump');
-    } else if (totalCoins >= 50) {
-        totalCoins -= 50;
+    } else if (totalCoins >= 10) {
+        totalCoins -= 10;
         localStorage.setItem('skyIslandCyanSkin', totalCoins);
         ownsCyan = true;
         localStorage.setItem('skyIslandCyanSkin', 'true');
